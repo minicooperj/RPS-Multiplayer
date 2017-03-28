@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>RPS-Multiplayer</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+	<link rel="stylesheet" type="text/css" href="assets/style.css">
+
+	
+</head>
+<body>
+<h1 class="text-center">Rock Paper Scissors</h1>
+
+<div class="input-group" style="width: 20rem; margin: auto auto;">
+  <span class="input-group-addon">Name</span>
+  <input type="text" id="nameField" class="form-control" aria-label="Name">
+  <button type="button" id= "nameButton" class="btn btn-primary btn-sm">Start</button>
+</div>
+
+<div id="playerId" class="text-center">Hi Name. You are Player 1</div>
+
+<div id="turnIndicator" class="text-center" turn-status="player1">It's your turn</div>
+<br>	
+
+<div class="container">
+<div class="row justify-content-center">
+	<div id="gameBoxes">
+		<div id="player1Box" class="card text-center" style="width: 20rem;">
+			<p id="player1Name" class="card-title">Player1 Name</p>	
+				<div id="player1Choices">
+					<button id="p1RockButton" class="btn btn-primary p1Button" value="rock">Rock</button>
+					<button id="p2PaperButton" class="btn btn-primary p1Button" value="paper">Paper</button>
+					<button id="p2ScissorsButton" class="btn btn-primary p1Button" value="scissors">Scissors</button>
+				</div>
+				
+				<p id="p1WinsLosses"><br> Wins: 0 Losses: 0 <br></p>
+		</div>
+
+		<div id="resultBox" class="card text-center" style="width: 20rem;"><br><br>Player 1 Wins!<br><br></div>
+
+		<div id="player2Box" class="card text-center" style="width: 20rem;">
+			<p id="player2Name" class="card-title">Player2 Name</p>	
+				<div id="player2Choices">
+					<button id="p2RockButton" class="btn btn-primary p2Button" value="rock">Rock</button>
+					<button id="p2PaperButton" class="btn btn-primary p2Button" value="paper">Paper</button>
+					<button id="p2ScissorsButton" class="btn btn-primary p2Button" value="scissors">Scissors</button>
+				</div>
+			<p id="p2WinsLosses"><br> Wins: 0 Losses: 0 <br></p>
+		</div>
+	</div>
+</div>
+</div>
+<br>
+<br>
+
+<div id="chatDiv" class="container">
+	<div class="row">
+		<div class="col-2"></div>
+		<div class="col-8">
+		<div id="chatBox" class="form-group">
+	    	<label for="chatArea">Chat Space</label>
+	    	<textarea class="form-control" id="chatArea" rows="5"></textarea>
+	  	</div>
+		
+		<div id="chatInput" class="input-group">
+			<input type="text" class="form-control" placeholder="Type your message here..." name="chat">
+			<span class="input-group-btn">
+        		<button class="btn btn-secondary" type="button">Send!</button>
+      		</span>
+		</div>
+		</div>
+		<div class="col-2"></div>
+	</div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/3.7.3/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyBzEhFLsOXf916mBiW77b1LzDohtnGiFw8",
+    authDomain: "rps-multiplayer-7368c.firebaseapp.com",
+    databaseURL: "https://rps-multiplayer-7368c.firebaseio.com",
+    storageBucket: "rps-multiplayer-7368c.appspot.com",
+    messagingSenderId: "215796405385"
+  };
+  firebase.initializeApp(config);
+</script>
+<script
+  src="https://code.jquery.com/jquery-3.2.1.min.js"
+  integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+  crossorigin="anonymous"></script>
+<script>
+// Declare globally accessible variables
+
+var player1Wins = 0;
+var player1Losses = 0;
+
+var player2Wins = 0;
+var player2Losses = 0;
+
+var draws = 0;
+
+var fire = firebase.database();
+
+var data;
+
+var playObj = {
+
+		player1: {
+			name: 1,
+			play: 1
+		},
+
+		player2: {
+			name: 1,
+			play: 1
+		},
+
+		plays: {
+			myPlay: 1,
+			opponentPlay: 1
+		},
+
+		wins: {
+
+		p1Wins: player1Wins,
+		p1Losses: player1Losses,
+		p2Wins: player2Wins,
+		p2Losses: player2Losses,
+		ties: draws 
+		},
+
+		opponentName: null
+}
+
+// Set up initial firebase data
+
+function start() {
+
+	fire.ref().set({
+			
+			player1: {
+				name: 1,
+				play: 1
+			},
+
+			player2: {
+				name: 1,
+				play: 1
+			},
+
+			wins: {
+
+		p1Wins: player1Wins,
+		p1Losses: player1Losses,
+		p2Wins: player2Wins,
+		p2Losses: player2Losses,
+		ties: draws 
+			}
+
+					});
+	};
+
+
+
+
+// Collect Player Names and store in Database
+
+$("#nameButton").on("click", function(event){
+
+	event.preventDefault();
+
+	var nameCaptured = $("#nameField").val().trim();
+
+	// Check to see if Name entered is player 1 or player 2
+
+	if((playObj.player1.name === 1) && ($("#nameField").val() !== "")){
+		playObj.player1.name = $("#nameField").val().trim();
+		console.log("Player 1's name is "+ playObj.player1.name);
+		$("#playerId").text("Hi "+ playObj.player1.name + " you're player 1");
+		fire.ref().update({
+			player1: {
+				name: playObj.player1.name,
+				play: 1
+			}
+
+		
+		
+		}); // end set up player 1 name
+
+		 // clear name input
+		 $("#nameField").val("");
+	} else if (($("#nameField").val() !== "") && (playObj.player1.name !== "") && (playObj.player2.name === 1)){
+		playObj.player2.name = $("#nameField").val().trim();
+		console.log("Player 2's name is "+ playObj.player2.name);
+		$("#playerId").text("Hi "+ playObj.player2.name + " you're player 2");
+		fire.ref().update({
+			player2: {
+				name: playObj.player2.name,
+				play: 1
+			}
+		
+		}); // end set up player 2 name
+
+
+	} 
+	
+}); // end nameButton function
+
+
+// Click on Player 1 Box
+$(".p1Button").on("click", function(event){
+	// Prevent refresh on click
+	event.preventDefault();
+
+	// Capture value from buton clicked 
+	var player1Choice = $(this).attr("value");
+
+	fire.ref().update({
+		player1: {
+			name: playObj.player1.name,
+			play: player1Choice
+		}
+	});
+
+	// Update div to indicate player 1 has chosen
+	$("#player1Choices").empty();
+	$("#player1Choices").html("<b> Waiting for Player 2 <b>");
+
+	// if statement to see whether to run gameEval function
+
+	if(playObj.player2.play = 1){
+	console.log("Waiting for other player"); 
+	}	else if(playObj.player2.play != 1){
+		gameEval();
+	} 
+});
+
+// Click on Player 2 Box
+$(".p2Button").on("click", function(event){
+	// Prevent refresh on click
+	event.preventDefault();
+
+	// Capture value from buton clicked 
+	var player2Choice = $(this).attr("value");
+
+	fire.ref().update({
+		player2: {
+			name: playObj.player2.name,
+			play: player2Choice
+		}
+	});
+
+	// Update div to indicate player 1 has chosen
+	$("#player2Choices").empty();
+	$("#player2Choices").html("<b> Let's see who won <b>");
+
+	// if statement to see whether to run gameEval function
+
+	if(playObj.player1.play = 1){
+	console.log("Waiting for other player"); 
+	}	else if(playObj.player1.play != 1){
+		gameEval();
+	} 
+});
+
+
+function gameEval(){
+
+	if (playObj.player1.play === playObj.player2.play){
+			draws++;
+		console.log("It's a tie");
+		$("#resultBox").text("It's a tie");	
+	}
+};
+
+
+
+</script>
+
+</body>
+</html>
